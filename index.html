@@ -295,6 +295,13 @@ const PGN_TEXT = `
 1. d4 Nf6 2. e3 { White just block the Bishop in c1. } 2... e6 3. Bd3 { [%csl Re4,Rf5,Rg6][%cal Re4g6] } 3... c5 4. c3 d5 { The battle for the square of e5 has begun. } 5. f4 { [%cal Gg1f3] } 5... Nc6 6. Nf3 Bd6 { White has 3 attackers on e5. Black has 2 attackers. } { [%csl Re5,Bf5,Rg5] } 1-0
 `;
 
+[Event "Pawn Endgames"]
+[White "Key Squares"]
+[Orientation "white"]
+
+{ Reaching ANY Key Square with your King guarantees promotion by force regardless of whose move it is (except with a/h rook pawns). PITFALL: Pushing e3-e4 before your King secures a Key Square reduces your flanking leverage and hands Black an easy draw.} { [%csl Gd5,Ge5,Gf5][%cal Be2d3] } 1. Kd3! { Outflank toward Key Squares d5/e5/f5 (1.e4+? drops control). } (1. e4?? { Too hasty: 1.e4+? forfeits key-square access if Defender holds opposition. } 1... Kd6) 1... Kd5 (1... Kf5 2. Kd4 Ke6 3. Ke4! { Direct opposition secures e5/f5/d5 winning transition. }) 2. e4+! Ke5 3. Ke3! { White seizes direct opposition with Black to move -> Key Square reached! } 3... Ke6 4. Kd4 Kd6 5. e5+! Ke6 6. Ke4 { 1-0 White wins. } 1-0
+
+
 /* ── Parse PGN into GAMES array ── */
 function parsePGNText(text) {
   const games = [];
