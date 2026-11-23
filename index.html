@@ -284,19 +284,25 @@ var Chess = function(fen) {
 
 /* ── PGN text – paste your games here ── */
 const PGN_TEXT = `
-[Event "Pawn Endgames"]
-[White "Key Squares"]
+[Event "M01: Pawn Endgames"]
+[Site "Vol I p.04 | 1.1 King & Pawn Mechanics"]
+[Date "2026.11.11"]
+[Round "2"]
+[White "Diag 002 (p.04): Key Squares (2nd–4th Rank vs. 5th–6th Rank Rules)"]
+[Black "De la Villa Ending 3; Dvoretsky DEM Ch. 1."]
+[Result "1-0"]
+[Annotator "Master Endgame Encyclopedia Vol I"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Master Endgame - Part 1: Pawns, Knights & Bishops"]
+[ChapterName "Diag 002 (p.04): Key Squares (2nd-4th Rank vs. 5th-6th Rank Rules) - De la Villa"]
+[FEN "8/8/8/4k3/8/4P3/4K3/8 w - - 0 1"]
+[SetUp "1"]
 [Orientation "white"]
-[FEN "8/4k3/8/8/8/4P3/4K3/8 w - - 0 1"]
 
-{ Reaching ANY Key Square with your King guarantees promotion by force regardless of whose move it is (except with a/h rook pawns). PITFALL: Pushing e3-e4 before your King secures a Key Square reduces your flanking leverage and hands Black an easy draw.} { [%csl Gd5,Ge5,Gf5][%cal Be2d3] } 1. Kd3! { Outflank toward Key Squares d5/e5/f5 (1.e4+? drops control). } (1. e4?? { Too hasty: 1.e4+? forfeits key-square access if Defender holds opposition. } 1... Kd6) 1... Kd5 (1... Kf5 2. Kd4 Ke6 3. Ke4! { Direct opposition secures e5/f5/d5 winning transition. }) 2. e4+! Ke5 3. Ke3! { White seizes direct opposition with Black to move -> Key Square reached! } 3... Ke6 4. Kd4 Kd6 5. e5+! Ke6 6. Ke4 { 1-0 White wins. } 1-0
+{ [Vol I p.04 | [FORCED WIN IF REACHED / DRAW IF HELD OUT]] BEACON: Reaching ANY Key Square with your King guarantees promotion by force regardless of whose move it is (except with a/h rook pawns). PITFALL: Pushing e3-e4 before your King secures a Key Square reduces your flanking leverage and hands Black an easy draw. (Source: De la Villa Ending 3; Dvoretsky DEM Ch. 1.) } { [%csl Gd5,Ge5,Gf5][%cal Be2d3] } 1. Kd3! { Outflank toward Key Squares d5/e5/f5 (1.e4+? drops control). } (1. e4?? { Too hasty: 1.e4+? forfeits key-square access if Defender holds opposition. } 1... Kd6) 1... Kd5 (1... Kf5 2. Kd4 Ke6 3. Ke4! { Direct opposition secures e5/f5/d5 winning transition. }) 2. e4+! Ke5 3. Ke3! { White seizes direct opposition with Black to move -> Key Square reached! } 3... Ke6 4. Kd4 Kd6 5. e5+! Ke6 6. Ke4 { 1-0 White wins. } 1-0
 `;
-
-[Event "Pawn Endgames"]
-[White "Key Squares"]
-[Orientation "white"]
-
-{ Reaching ANY Key Square with your King guarantees promotion by force regardless of whose move it is (except with a/h rook pawns). PITFALL: Pushing e3-e4 before your King secures a Key Square reduces your flanking leverage and hands Black an easy draw.} { [%csl Gd5,Ge5,Gf5][%cal Be2d3] } 1. Kd3! { Outflank toward Key Squares d5/e5/f5 (1.e4+? drops control). } (1. e4?? { Too hasty: 1.e4+? forfeits key-square access if Defender holds opposition. } 1... Kd6) 1... Kd5 (1... Kf5 2. Kd4 Ke6 3. Ke4! { Direct opposition secures e5/f5/d5 winning transition. }) 2. e4+! Ke5 3. Ke3! { White seizes direct opposition with Black to move -> Key Square reached! } 3... Ke6 4. Kd4 Kd6 5. e5+! Ke6 6. Ke4 { 1-0 White wins. } 1-0
 
 
 /* ── Parse PGN into GAMES array ── */
@@ -482,10 +488,12 @@ function buildGameData(pgn) {
     white: pgn.headers.White || pgn.headers.Event || 'White',
     black: pgn.headers.Black || '',
     event: pgn.headers.Event || '',
+    site: pgn.headers.Site || '',
     date: pgn.headers.Date || '',
     eco: pgn.headers.ECO || '',
     opening: pgn.headers.Opening || '',
     result: pgn.headers.Result || '*',
+    annotator: pgn.headers.Annotator || '',
     orientation: (pgn.headers.Orientation || 'white').toLowerCase(),
     studyName: pgn.headers.StudyName || '',
     chapterName: pgn.headers.ChapterName || '',
@@ -646,16 +654,18 @@ function renderGame(g) {
   let html = '';
 
   // header
-  if (g.eco || g.opening) {
-    html += '<div class="kicker">' + (g.eco ? g.eco + ' ' : '') + g.opening + '</div>';
+  const ecoVal = (g.eco && g.eco !== '?') ? g.eco : '';
+  const openVal = (g.opening && g.opening !== '?') ? g.opening : '';
+  if (ecoVal || openVal) {
+    html += '<div class="kicker">' + (ecoVal ? ecoVal + ' ' : '') + openVal + '</div>';
   }
 
-  // Title: use player names if available, otherwise study/chapter name
+  // Title: prefer study/chapter name, then player names, then event
   let title = '';
-  if (g.white && g.black) {
-    title = g.white + ' vs ' + g.black;
-  } else if (g.studyName || g.chapterName) {
+  if (g.chapterName || g.studyName) {
     title = g.chapterName || g.studyName;
+  } else if (g.white && g.black) {
+    title = g.white + ' vs ' + g.black;
   } else {
     title = g.white || g.event || 'Game';
   }
@@ -664,9 +674,11 @@ function renderGame(g) {
   // Sub-header
   const parts = [];
   if (g.event) parts.push(g.event);
+  if (g.site) parts.push(g.site);
   if (g.date) parts.push(g.date);
   if (g.result && g.result !== '*') parts.push('Result: <b>' + g.result + '</b>');
   if (parts.length) html += '<p class="gamehead">' + parts.join(' &middot; ') + '</p>';
+  if (g.annotator) html += '<p class="gamehead" style="font-style:italic">Annotator: ' + g.annotator + '</p>';
 
   // Starting position comment
   if (positions[0].comment) {
@@ -777,10 +789,12 @@ document.getElementById('dlPrint').onclick = function() {
     const a = document.createElement('a');
     a.dataset.g = idx;
     a.onclick = function() { loadGame(idx); };
-    if (g.white && g.black) {
+    if (g.chapterName || g.studyName) {
+      a.textContent = g.chapterName || g.studyName;
+    } else if (g.white && g.black) {
       a.textContent = g.white + ' – ' + g.black;
     } else {
-      a.textContent = g.chapterName || g.event || 'Game ' + (idx + 1);
+      a.textContent = g.event || 'Game ' + (idx + 1);
     }
     if (idx === 0) a.className = 'on';
     toc.appendChild(a);
