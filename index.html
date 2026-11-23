@@ -59,10 +59,14 @@ a.mv.cur{background:var(--hl);border-bottom-color:transparent}
 /* comments */
 .comment{display:inline;font-style:italic;color:var(--muted);font-size:.88em;font-weight:400;margin:0 4px}
 .comment-block{display:block;background:var(--side);border-left:3px solid var(--main);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0;font-style:normal;color:var(--ink);font-size:.9em;line-height:1.6;font-weight:400}
-.comment-block .clabel{display:inline-block;font-weight:700;font-size:.78em;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:middle}
-.comment-block .clabel.beacon{background:#2a7e19;color:#fff}
-.comment-block .clabel.pitfall{background:#c0392b;color:#fff}
-.comment-block .clabel.note{background:var(--main);color:#fff}
+.comment-block .clabel{display:inline-block;font-weight:700;font-size:.78em;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:3px;margin-right:6px;vertical-align:middle}
+.clabel.cl-green{background:#2a7e19;color:#fff}
+.clabel.cl-red{background:#c0392b;color:#fff}
+.clabel.cl-blue{background:var(--main);color:#fff}
+.clabel.cl-purple{background:#7b2d8e;color:#fff}
+.clabel.cl-orange{background:#d4740a;color:#fff}
+.clabel.cl-teal{background:#0e8a7e;color:#fff}
+.clabel.cl-default{background:#555;color:#fff}
 .comment-block .csrc{display:block;margin-top:6px;font-size:.82em;color:var(--muted);font-style:italic}
 .variation{display:inline;font-style:italic;color:var(--muted);font-size:.85em;margin:0 2px;opacity:.85}
 
@@ -1518,6 +1522,16 @@ function extractAnnotations(comment) {
 }
 
 /* ── Format comment text for display ── */
+// Label color map: add your own keywords here!
+// green = positive/key idea, red = warning/danger, blue = info/note, purple = concept, orange = tip
+var LABEL_COLORS = {
+  'BEACON': 'green', 'KEY': 'green', 'KEY IDEA': 'green', 'WINNING IDEA': 'green', 'GOAL': 'green',
+  'PITFALL': 'red', 'WARNING': 'red', 'DANGER': 'red', 'MISTAKE': 'red', 'TRAP': 'red', 'BLUNDER': 'red',
+  'BOOK NOTE': 'blue', 'NOTE': 'blue', 'RULE': 'blue', 'PRINCIPLE': 'blue', 'REMEMBER': 'blue',
+  'KEY CONCEPT': 'purple', 'CONCEPT': 'purple', 'THEME': 'purple', 'PATTERN': 'purple', 'STRATEGY': 'purple',
+  'TIP': 'orange', 'HINT': 'orange', 'PLAN': 'orange', 'TECHNIQUE': 'orange', 'METHOD': 'orange',
+  'EXERCISE': 'teal', 'QUESTION': 'teal', 'TEST': 'teal', 'DRILL': 'teal'
+};
 function formatComment(text, isBlock) {
   if (!text) return '';
   var s = text.trim();
@@ -1530,12 +1544,13 @@ function formatComment(text, isBlock) {
     var p = parts[pi];
     // Extract source references like (Source: ...)
     p = p.replace(/\(Source:\s*([^)]+)\)/g, '<span class="csrc">Source: $1</span>');
-    // Format labels: BEACON:, PITFALL:, BOOK NOTE:, KEY CONCEPT:, RULE:
-    p = p.replace(/\bBEACON:\s*/g, '<span class="clabel beacon">Beacon</span> ');
-    p = p.replace(/\bPITFALL:\s*/g, '<span class="clabel pitfall">Pitfall</span> ');
-    p = p.replace(/\bBOOK NOTE:\s*/g, '<span class="clabel note">Book Note</span> ');
-    p = p.replace(/\bKEY CONCEPT:\s*/g, '<span class="clabel note">Key Concept</span> ');
-    p = p.replace(/\bRULE:\s*/g, '<span class="clabel note">Rule</span> ');
+    // Auto-detect UPPERCASE LABEL: patterns (1-3 words, all caps, followed by colon)
+    p = p.replace(/\b([A-Z][A-Z ]{0,20}[A-Z]):\s*/g, function(match, label) {
+      var key = label.trim();
+      var color = LABEL_COLORS[key] || 'default';
+      var display = key.charAt(0) + key.slice(1).toLowerCase();
+      return '<span class="clabel cl-' + color + '">' + display + '</span> ';
+    });
     // Strip leading bracket references like [Vol I p.04 | [...]]
     p = p.replace(/^\[Vol\s+[^\]]*\]\s*/i, '');
     p = p.replace(/^\[\[?[A-Z ]+\/?[A-Z ]*\]?\]\s*/i, '');

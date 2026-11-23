@@ -1,0 +1,43 @@
+[Event "Your Study Name"]
+[Site "Book or Source Reference"]
+[Date "2026.11.23"]
+[Round "1"]
+[White "Diagram Title Goes Here"]
+[Black "Author or Source"]
+[Result "1-0"]
+[Annotator "Your Name"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Your Study Collection Name"]
+[ChapterName "Diag 001: Short Title For Sidebar"]
+[FEN "6k1/8/8/8/8/8/P7/7K w - - 0 1"]
+[SetUp "1"]
+[Orientation "white"]
+
+{ BEACON: The main learning point or key idea of this position. What you should take away. || PITFALL: Common mistake to avoid. What goes wrong if you play carelessly. || (Source: De la Villa Ending 1; Dvoretsky DEM Ch. 1.) || BOOK NOTE: Extended explanation or quote from the book. This can be as long as you want — the reader will display it in a nicely formatted block. }
+1. a4 { Short comment after a move — under 120 characters stays inline with the move. } 1... Kf7 { You can comment on Black's moves too. }
+2. a5 { GOAL: Longer comments (over 120 characters) automatically get their own block with the blue left border. This one is long enough to trigger the block format, so it will look nice and separated from the moves. } { [%cal Ba5d5,Bd5d8,Ba5a8,Bd8a8] Arrow annotations go in a separate comment right after. Colors: R=red, G=green, B=blue, Y=yellow. } 2... Ke6
+3. a6 { [%csl Rc6,Gc8,Ba8] Circle annotations — same color codes. } 3... Kd6
+4. a7 { TIP: You can use any of these labels in your comments. They auto-detect! } 4... Kc7
+5. a8=Q { 1-0 White wins. } 1-0
+
+[Event "Your Study Name"]
+[Site "Another Source"]
+[Date "2026.11.23"]
+[Round "2"]
+[White "Another Diagram Title"]
+[Black "Another Author"]
+[Result "1/2-1/2"]
+[Annotator "Your Name"]
+[Variant "Standard"]
+[ECO "?"]
+[Opening "?"]
+[StudyName "Your Study Collection Name"]
+[ChapterName "Diag 002: Second Chapter Title"]
+[FEN "8/8/8/4k3/8/4P3/4K3/8 w - - 0 1"]
+[SetUp "1"]
+[Orientation "white"]
+
+{ KEY CONCEPT: Use this label for conceptual explanations. || STRATEGY: Use this for strategic ideas. || TECHNIQUE: Use this for specific methods or procedures. || EXERCISE: Pose a question to the reader here. }
+1. Kd3 { WINNING IDEA: Outflank toward the key squares. } (1. e4?? { MISTAKE: Too hasty — this forfeits key-square access. } 1... Kd6) 1... Kd5 (1... Kf5 { THEME: Black tries to approach from the side. } 2. Kd4 Ke6 3. Ke4! { Direct opposition secures the key squares. }) 2. e4+ Ke5 3. Ke3 { RULE: White seizes direct opposition with Black to move. } 3... Ke6 4. Kd4 Kd6 5. e5+ Ke6 6. Ke4 { 1-0 White wins. } 1-0
