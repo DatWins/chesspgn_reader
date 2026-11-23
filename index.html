@@ -58,6 +58,7 @@ p.ml a.mv{color:var(--main);border-bottom:none}
 
 /* comments */
 .comment{display:inline;font-style:normal;color:var(--main);font-size:.92em;font-weight:700;margin:0 2px}
+.variation{display:inline;font-style:italic;color:var(--muted);font-size:.88em;margin:0 2px}
 
 /* right board panel */
 aside.bp{position:sticky;top:49px;padding:16px 20px;border-left:1px solid var(--line);height:calc(100vh - 49px);overflow:auto;width:calc(var(--bw) + 70px)}
@@ -140,6 +141,7 @@ main p b a.mv,main p b{color:var(--main);font-weight:700}
   .gamehead,.gamehead b{color:#333!important}
   a.mv{color:#000!important;border:none!important;font-weight:700!important}
   .comment{color:#1a4a8a!important;font-weight:700!important}
+  .variation{color:#555!important;font-style:italic!important}
   .ml b{color:#000!important}
 }
 </style>
@@ -282,17 +284,12 @@ var Chess = function(fen) {
 
 /* ── PGN text – paste your games here ── */
 const PGN_TEXT = `
-[Event "Sample Game"]
-[Date "2026.11.23"]
-[Result "1-0"]
-[Variant "Standard"]
-[ECO "A45"]
-[Opening "Indian Defense"]
-[StudyName "Sample Study"]
-[ChapterName "Notes for Indian Defense"]
+[Event "Pawn Endgames"]
+[White "Key Squares"]
 [Orientation "white"]
+[FEN "8/4k3/8/8/8/4P3/4K3/8 w - - 0 1"]
 
-1. d4 Nf6 2. e3 { White just block the Bishop in c1. } 2... e6 3. Bd3 { [%csl Re4,Rf5,Rg6][%cal Re4g6] } 3... c5 4. c3 d5 { The battle for the square of e5 has begun. } 5. f4 { [%cal Gg1f3] } 5... Nc6 6. Nf3 Bd6 { White has 3 attackers on e5. Black has 2 attackers. } { [%csl Re5,Bf5,Rg5] } 1-0
+{ Reaching ANY Key Square with your King guarantees promotion by force regardless of whose move it is (except with a/h rook pawns). PITFALL: Pushing e3-e4 before your King secures a Key Square reduces your flanking leverage and hands Black an easy draw.} { [%csl Gd5,Ge5,Gf5][%cal Be2d3] } 1. Kd3! { Outflank toward Key Squares d5/e5/f5 (1.e4+? drops control). } (1. e4?? { Too hasty: 1.e4+? forfeits key-square access if Defender holds opposition. } 1... Kd6) 1... Kd5 (1... Kf5 2. Kd4 Ke6 3. Ke4! { Direct opposition secures e5/f5/d5 winning transition. }) 2. e4+! Ke5 3. Ke3! { White seizes direct opposition with Black to move -> Key Square reached! } 3... Ke6 4. Kd4 Kd6 5. e5+! Ke6 6. Ke4 { 1-0 White wins. } 1-0
 `;
 
 [Event "Pawn Endgames"]
@@ -379,20 +376,20 @@ function parseMovetext(movetext) {
       if (j === -1) j = movetext.length;
       tokens.push({ type: 'comment', text: movetext.substring(i + 1, j) });
       i = j + 1;
-    } else if (movetext[i] === '(' || movetext[i] === ')') {
-      // Skip variations for now
-      if (movetext[i] === '(') {
-        let depth = 1;
-        let j = i + 1;
-        while (j < movetext.length && depth > 0) {
-          if (movetext[j] === '(') depth++;
-          else if (movetext[j] === ')') depth--;
-          j++;
-        }
-        i = j;
-      } else {
-        i++;
+    } else if (movetext[i] === '(') {
+      // Capture variation content
+      let depth = 1;
+      let j = i + 1;
+      while (j < movetext.length && depth > 0) {
+        if (movetext[j] === '(') depth++;
+        else if (movetext[j] === ')') depth--;
+        j++;
       }
+      const varText = movetext.substring(i + 1, j - 1).trim();
+      tokens.push({ type: 'variation', text: varText });
+      i = j;
+    } else if (movetext[i] === ')') {
+      i++;
     } else if (/\s/.test(movetext[i])) {
       i++;
     } else {
@@ -416,19 +413,18 @@ function parseMovetext(movetext) {
 
 /* ── Build game data from parsed PGN ── */
 function buildGameData(pgn) {
-  const chess = new Chess();
-  const positions = [{ fen: chess.fen(), san: null, from: null, to: null, ply: 0, comment: null, circles: [], arrows: [] }];
+  const startFen = pgn.headers.FEN || pgn.headers.Fen || null;
+  const chess = startFen ? new Chess(startFen) : new Chess();
+  const positions = [{ fen: chess.fen(), san: null, from: null, to: null, ply: 0, comment: null, circles: [], arrows: [], variation: null }];
   const tokens = parseMovetext(pgn.movetext);
 
   let plyCount = 0;
-  let pendingComment = null;
 
   for (let i = 0; i < tokens.length; i++) {
     const tok = tokens[i];
 
     if (tok.type === 'comment') {
       const ann = extractAnnotations(tok.text);
-      // Attach comment to the last position (after a move) or starting position
       const lastPos = positions[positions.length - 1];
       if (lastPos.comment) {
         lastPos.comment += ' ' + ann.text;
@@ -437,6 +433,32 @@ function buildGameData(pgn) {
       }
       lastPos.circles = lastPos.circles.concat(ann.circles);
       lastPos.arrows = lastPos.arrows.concat(ann.arrows);
+    } else if (tok.type === 'variation') {
+      // Re-tokenize variation but keep move numbers for display
+      let varDisplay = '';
+      let vi = 0;
+      const vt = tok.text;
+      while (vi < vt.length) {
+        if (vt[vi] === '{') {
+          let vj = vt.indexOf('}', vi);
+          if (vj === -1) vj = vt.length;
+          const vAnn = extractAnnotations(vt.substring(vi + 1, vj));
+          if (vAnn.text) varDisplay += vAnn.text + ' ';
+          vi = vj + 1;
+        } else if (/\s/.test(vt[vi])) {
+          vi++;
+        } else {
+          let vj = vi;
+          while (vj < vt.length && !/[\s{}]/.test(vt[vj])) vj++;
+          varDisplay += vt.substring(vi, vj) + ' ';
+          vi = vj;
+        }
+      }
+      // Attach variation to the last position
+      const lastPos = positions[positions.length - 1];
+      if (!lastPos.variation) lastPos.variation = '';
+      if (lastPos.variation) lastPos.variation += ' ';
+      lastPos.variation += varDisplay.trim();
     } else if (tok.type === 'move') {
       const m = chess.move(tok.text, { sloppy: true });
       if (m) {
@@ -449,7 +471,8 @@ function buildGameData(pgn) {
           ply: plyCount,
           comment: null,
           circles: [],
-          arrows: []
+          arrows: [],
+          variation: null
         });
       }
     }
@@ -662,6 +685,10 @@ function renderGame(g) {
     // Inline comment after the move
     if (pos.comment) {
       html += '<span class="comment">' + pos.comment + '</span> ';
+    }
+    // Inline variation after the move/comment
+    if (pos.variation) {
+      html += '<span class="variation">(' + pos.variation + ')</span> ';
     }
   }
   if (g.result && g.result !== '*') {
